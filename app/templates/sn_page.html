@@ -1,0 +1,21 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+<head>
+{% block head %}
+    {{ super() }}
+    <title>{% block title %}活动兑换码提交{% endblock title %}</title>
+{% endblock head %}
+</head>
+
+{% include "_navbar.html" %}
+
+{% block content %}
+<div class="container">
+    {% block page_content %}
+        {{ wtf.quick_form(form) }}
+        <br><br>
+        {% include "_layout.html" %}
+    {% endblock %}
+</div>
+{% endblock %}
