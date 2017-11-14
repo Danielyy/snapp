@@ -6,6 +6,7 @@ from .. import db
 from ..models import SeriesNumber
 from . import main
 from . forms import SeriesNumberFormAdd, SeriesNumberFormUpdate, UploadFileForm
+from .webhooks import sn_send_info
 
 # ALLOWED_EXTENSIONS = set(['txt'])
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -128,6 +129,8 @@ def sn_update(activity):
         # 被领取的序列号进行标记为已经领取，并更新数据库
         if re_query:
             flash('{0} 用户本次领取{1}序列号： {2} '.format(form.user_account.data, form.category.data, re_query.series_number), 'success')
+            # 向钉钉客服群发送消息推送
+            sn_send_info(form.user_account.data, form.category.data, re_query.series_number)
             re_query.receipt_status = True
             re_query.sn_output_date = form.sn_output_date.data
             re_query.user_account = form.user_account.data
