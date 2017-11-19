@@ -5,12 +5,12 @@ from flask import render_template, request, session, redirect, url_for, current_
 from .. import db
 from ..models import SeriesNumber
 from . import main
-from . forms import SeriesNumberFormAdd, SeriesNumberFormUpdate, UploadFileForm
-from .webhooks import sn_send_info
+from . forms import SeriesNumberFormAdd, SeriesNumberFormUpdate, UploadFileForm, SearchInfo
+from .webhooks import SNSendDing
 
 # ALLOWED_EXTENSIONS = set(['txt'])
 basedir = os.path.abspath(os.path.dirname(__file__))
-reg_sn = r'^([A-Z0-9]{4}-){3}[A-Z0-9]{4}'
+reg_sn = r'([A-Z0-9]{4}-){3}[A-Z0-9]{4}'
 
 
 # 判断上传文件名称是否符合要求
@@ -129,15 +129,75 @@ def sn_update(activity):
         # 被领取的序列号进行标记为已经领取，并更新数据库
         if re_query:
             flash('{0} 用户本次领取{1}序列号： {2} '.format(form.user_account.data, form.category.data, re_query.series_number), 'success')
-            # 向钉钉客服群发送消息推送
-            sn_send_info(form.user_account.data, form.category.data, re_query.series_number)
             re_query.receipt_status = True
             re_query.sn_output_date = form.sn_output_date.data
             re_query.user_account = form.user_account.data
             db.session.commit()
             # 更新库存
             form.sn_stock.data = db.session.query(SeriesNumber).filter_by(category=activity, receipt_status=False).count()
+            # 向钉钉客服群发送消息推送
+            SNSendDing(form.user_account.data, form.category.data, re_query.series_number)
         else:
             flash('已经没有序列号可以领取！', 'warning')
         return redirect(url_for('.sn_update', activity=activity))
     return render_template('sn_page.html', form=form)
+
+
+# 领取记录查询
+@main.route('/info', methods=['GET', 'POST'])
+def info():
+    form = SearchInfo(request.form)
+    page = request.args.get('page', 1, type=int)
+    if request.method == 'POST':
+        session['active'] = form.category.data
+        session['account'] = form.user_account.data
+        return redirect(url_for('.test'))
+    form.category.data = session.get('active')
+    form.user_account.data = session.get('account')
+    if form.user_account.data == '':
+        count = db.session.query(SeriesNumber).filter_by(category=form.category.data, receipt_status=True).count()
+        pagination = db.session.query(SeriesNumber).filter_by(category=form.category.data, receipt_status=True).paginate(page, 10, False)
+    else:
+        count = db.session.query(SeriesNumber).filter_by(category=form.category.data, user_account=form.user_account.data, receipt_status=True).count()
+        pagination = db.session.query(SeriesNumber).filter_by(category=form.category.data, user_account=form.user_account.data,
+                                                              receipt_status=True).paginate(page, 10, False)
+    re_query = pagination.items
+    if session.get('active') == 'baidu':
+        category = '百度网盘活动'
+    elif session.get('active') == 'aiqiyi':
+        category = '爱奇艺活动'
+    else:
+        category = ' '
+    return render_template('info.html', form=form, count=count, category=category, re_query=re_query,
+                               pagination=pagination)
+
+
+# 仅做测试使用
+@main.route('/test', methods=['GET', 'POST'])
+def test():
+    form = SearchInfo(request.form)
+    page = request.args.get('page', 1, type=int)
+    if request.method == 'POST':
+        session['active'] = form.category.data
+        session['account'] = form.user_account.data
+        return redirect(url_for('.test'))
+    form.category.data = session.get('active')
+    form.user_account.data = session.get('account')
+    if form.user_account.data == '':
+        count = db.session.query(SeriesNumber).filter_by(category=form.category.data, receipt_status=True).count()
+        pagination = db.session.query(SeriesNumber).filter_by(category=form.category.data, receipt_status=True).paginate(page, 10, False)
+    else:
+        count = db.session.query(SeriesNumber).filter_by(category=form.category.data, user_account=form.user_account.data, receipt_status=True).count()
+        pagination = db.session.query(SeriesNumber).filter_by(category=form.category.data, user_account=form.user_account.data,
+                                                              receipt_status=True).paginate(page, 10, False)
+    re_query = pagination.items
+    if session.get('active') == 'baidu':
+        category = '百度网盘活动'
+    elif session.get('active') == 'aiqiyi':
+        category = '爱奇艺活动'
+    else:
+        category = ' '
+    return render_template('test.html', form=form, count=count, category=category, re_query=re_query,
+                               pagination=pagination)
+
+

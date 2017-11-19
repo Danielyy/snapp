@@ -30,6 +30,10 @@ class ProductionConfig(Config):
                               'sqlite:///' + os.path.join(basedir, 'data/data.sqlite')
 
 
+# class MySQLProductionConfig(Config):
+#     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+#                               'mysql://username:password@hostname/database'
+
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,

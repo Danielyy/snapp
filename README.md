@@ -7,6 +7,8 @@
 2. 提供通过.txt文件方式导入新序列号
 3. 限制同一账户的多次领取
 4. 导入序列号时判断是否有重复的序列号
+5. 提供已领取序列号查询，可通过活动类型、用户账户进行查询（支持分页显示）
+6. 通过webhooks向钉钉群推送信息
 
 ### 文件目录结构：
 
@@ -29,6 +31,7 @@
     ├── config.py <配置文件>
     ├── data <保持数据库目录>
     │   └── data-dev.sqlite
+    ├── migrations <数据库迁移脚本>
     ├── manage.py <运行管理>
     ├── README.md
     ├── requirements.txt <运行环境>
@@ -47,8 +50,10 @@
 ````
 pip install -r requirements.txt
 ````
-2. 在data目录建立数据库和表，模型如下：
+2. 在data目录建立SQLite数据库和表，模型如下：
 ````
+python3 manage.py db upgrade
+通过以上命令在data目录下创建数据库和表，模型如下：
 class SeriesNumber(db.Model):
     __tablename__ = 'series_numbers' #表单名称
     id = db.Column(db.Integer, primary_key=True)

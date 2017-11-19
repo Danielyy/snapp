@@ -39,3 +39,11 @@ class UploadFileForm(Form):
     hidden_tag = HiddenField()
     filename = FileField('选择上传文件：', [validators.DataRequired()])
     submit = SubmitField('提交文件')
+
+
+# 查询数据记录
+class SearchInfo(Form):
+    hidden_tag = HiddenField()
+    category = SelectField('活动类别查询：', choices=[('aiqiyi', '爱奇艺活动'), ('baidu', '百度网盘活动')])
+    user_account = StringField('领取账户查询', [validators.Email(message='错误的账户格式！')])
+    submit = SubmitField('查询信息')

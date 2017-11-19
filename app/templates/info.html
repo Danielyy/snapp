@@ -1,0 +1,46 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% from "bootstrap/pagination.html" import render_pagination %}
+{% import "_macros.html" as macros %}
+
+
+<head>
+{% block head %}
+    {{ super() }}
+    <title>{% block title %}记录查询{% endblock title %}</title>
+{% endblock head %}
+</head>
+
+{% include "_navbar.html" %}
+
+{% block content %}
+<div class="container">
+    {% block page_content %}
+        {{ wtf.quick_form(form) }}
+        <br><br>
+        <div class="panel panel-default">
+            <div class="panel-heading">共查询到 {{ count }} 条{{ category }}记录</div>
+            <!-- Table -->
+            <table class="table">
+                <tr>
+                <th>序列号</th>
+                <th>领取时间</th>
+                <th>领取账户</th>
+                </tr>
+
+                {% for info in re_query %}
+                <tr>
+                <td>{{ info.series_number }}</td>
+                <td>{{ info.sn_output_date.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+                <td>{{ info.user_account }}</td>
+                </tr>
+                {% endfor %}
+
+            </table>
+        </div>
+        {{ render_pagination(pagination) }}
+
+        {% include "_layout.html" %}
+    {% endblock %}
+</div>
+{% endblock %}

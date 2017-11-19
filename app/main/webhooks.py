@@ -10,15 +10,15 @@ HEADERS = {
 }
 
 
-def sn_send_info(user_account, activity, series_number):
-    TextMsg = {
+def SNSendDing(user_account, activity, series_number):
+    textmsg = {
         "msgtype": "text",
         "text": {
             "content": '{0} 用户已成功领取{1}序列号： {2} '.format(user_account, activity, series_number)
         }
     }
     # SendTextMsg = json.dumps(TextMsg)
-    requests.post(url=client_service_small, data=json.dumps(TextMsg), headers=HEADERS)
+    requests.post(url=client_service_small, data=json.dumps(textmsg), headers=HEADERS)
     # res = requests.post(url=url, data=SendTextMsg, headers=HEADERS)
     # print(res.text)
     return
