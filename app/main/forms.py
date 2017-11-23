@@ -12,7 +12,7 @@ class SeriesNumberFormAdd(Form):
     hidden_tag = HiddenField()
     # sn_stock = StringField('序列号库存:', render_kw={'readonly': 'readonly'})
     # series_number = StringField('序列号：', [validators.DataRequired(), validators.Regexp(reg_sn)])
-    category = SelectField('活动类别：', default='aiqiyi', choices=[('aiqiyi', '爱奇艺活动'), ('baidu', '百度网盘活动')])
+    category = SelectField('活动类别：', default='aiqiyi', choices=[('aiqiyi', '爱奇艺活动'), ('baidu', '百度网盘活动'), ('vip-8', 'VIP-8元红包')])
     sn_input_date = DateField('序列号入库日期：', [validators.DataRequired()], render_kw={'readonly': 'readonly'})
     # sn_file = FileField('序列号文件：', validators=[FileRequired(), FileAllowed(['txt'], '无格式文本文件！')])
     filename = FileField('序列号文件：', [validators.DataRequired()])
@@ -44,6 +44,6 @@ class UploadFileForm(Form):
 # 查询数据记录
 class SearchInfo(Form):
     hidden_tag = HiddenField()
-    category = SelectField('活动类别查询：', choices=[('aiqiyi', '爱奇艺活动'), ('baidu', '百度网盘活动')])
+    category = SelectField('活动类别查询：', choices=[('aiqiyi', '爱奇艺活动'), ('baidu', '百度网盘活动'), ('vip-8', 'VIP-8元红包')])
     user_account = StringField('领取账户查询', [validators.Email(message='错误的账户格式！')])
     submit = SubmitField('查询信息')

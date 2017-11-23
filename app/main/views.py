@@ -67,6 +67,8 @@ def sn_add():
         category_name = '爱奇艺活动'
     if form.category.data == 'baidu':
         category_name = '百度网盘活动'
+    if form.category.data == 'vip-8':
+        category_name = 'VIP-8元红包'
     if request.method == 'POST':
         file = request.files['filename']
         if file and allowed_file(file.filename):
@@ -76,25 +78,25 @@ def sn_add():
             sn_list = openfile(os.path.join(basedir, 'upload/' + file.filename))
             # 循环增加序列号导入数据库
             for i in range(len(sn_list)):
-                if re.match(reg_sn, sn_list[i]):#判断是否有合法的序列号
-                    if search_sn(re.match(reg_sn, sn_list[i]).group()):#判断是否有重复的序列号
-                        flash('序列号：{0} 已经存在，不能重复导入！'.format(re.match(reg_sn, sn_list[i]).group()), 'warning')
-                        pass  #可以补充有重复序列号的处理逻辑
-                    else:
-                        series_number = re.match(reg_sn, sn_list[i]).group()
-                        category = form.category.data
-                        sn_input_date = form.sn_input_date.data
-                        sn_output_date = None
-                        user_account = None
-                        receipt_status = False
-                        db.session.add(SeriesNumber(series_number=series_number,
-                                                    category=category,
-                                                    sn_input_date=sn_input_date,
-                                                    sn_output_date=sn_output_date,
-                                                    user_account=user_account,
-                                                    receipt_status=receipt_status))
-                        db.session.commit()
-                        count += 1
+                # if re.match(reg_sn, sn_list[i]):#判断是否有合法的序列号
+                if search_sn(sn_list[i]):#判断是否有重复的序列号
+                    flash('序列号：{0} 已经存在，不能重复导入！'.format(re.match(reg_sn, sn_list[i]).group()), 'warning')
+                    pass  #可以补充有重复序列号的处理逻辑
+                else:
+                    series_number = sn_list[i]
+                    category = form.category.data
+                    sn_input_date = form.sn_input_date.data
+                    sn_output_date = None
+                    user_account = None
+                    receipt_status = False
+                    db.session.add(SeriesNumber(series_number=series_number,
+                                                category=category,
+                                                sn_input_date=sn_input_date,
+                                                sn_output_date=sn_output_date,
+                                                user_account=user_account,
+                                                receipt_status=receipt_status))
+                    db.session.commit()
+                    count += 1
             flash('本次共导入{0}序列号{1}条！'.format(category_name, count), 'success')
             return redirect(url_for('.sn_add'))
         else:
@@ -110,6 +112,8 @@ def sn_update(activity):
         form.category.data = '爱奇艺活动'
     if activity == 'baidu':
         form.category.data = '百度网盘活动'
+    if activity == 'vip-8':
+        form.category.data = 'VIP-8元红包'
     form.sn_output_date.data = datetime.datetime.today()
     form.sn_stock.data = db.session.query(SeriesNumber).filter_by(category=activity, receipt_status=False).count()
     if request.method == 'POST' and form.validate():
@@ -151,7 +155,7 @@ def info():
     if request.method == 'POST':
         session['active'] = form.category.data
         session['account'] = form.user_account.data
-        return redirect(url_for('.test'))
+        return redirect(url_for('.info'))
     form.category.data = session.get('active')
     form.user_account.data = session.get('account')
     if form.user_account.data == '':
@@ -166,6 +170,8 @@ def info():
         category = '百度网盘活动'
     elif session.get('active') == 'aiqiyi':
         category = '爱奇艺活动'
+    elif session.get('active') == 'VIP-8':
+        category = 'VIP-8元红包'
     else:
         category = ' '
     return render_template('info.html', form=form, count=count, category=category, re_query=re_query,
