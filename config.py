@@ -6,7 +6,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ALLOWED_EXTENSIONS = set(['txt'])
+    ALLOWED_EXTENSIONS = set(['txt', 'xlsx'])
 
     @staticmethod
     def init_app(app):
@@ -30,9 +30,9 @@ class ProductionConfig(Config):
                               'sqlite:///' + os.path.join(basedir, 'data/data.sqlite')
 
 
-# class MySQLProductionConfig(Config):
-#     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-#                               'mysql://username:password@hostname/database'
+class MySQLProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+                              'mysql://root:yzskynet@127.0.0.1/sn_data'
 
 config = {
     'development': DevelopmentConfig,

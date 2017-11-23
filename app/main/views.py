@@ -7,8 +7,8 @@ from ..models import SeriesNumber
 from . import main
 from . forms import SeriesNumberFormAdd, SeriesNumberFormUpdate, UploadFileForm, SearchInfo
 from .webhooks import SNSendDing
+from openpyxl import load_workbook
 
-# ALLOWED_EXTENSIONS = set(['txt'])
 basedir = os.path.abspath(os.path.dirname(__file__))
 reg_sn = r'([A-Z0-9]{4}-){3}[A-Z0-9]{4}'
 
@@ -30,9 +30,19 @@ def search_sn(sn):
 
 
 # 读取兑换码文件到一个list中
-def openfile(file):
+def open_txt_file(file):
     with open(file, 'r') as f:
         sn_list = f.readlines()
+    return sn_list
+
+# 读取excel文件第一列内容到list中
+# 注意：excel文件不要有标题行，第一列序列号
+def open_xlsx_file(file):
+    workbook = load_workbook(file)
+    rows = workbook['Sheet1'].rows
+    sn_list = []
+    for row in rows:
+        sn_list.append(row[0].value.strip())
     return sn_list
 
 
@@ -61,6 +71,7 @@ def upload():
 def sn_add():
     form = SeriesNumberFormAdd(request.form)
     form.sn_input_date.data = datetime.datetime.today()
+
     # 统计导入的条数
     count = 0
     if form.category.data == 'aiqiyi':
@@ -75,12 +86,16 @@ def sn_add():
             file.save(os.path.join(basedir, 'upload/' + file.filename))
             flash('文件上传成功！', 'success')
             # 增加文件内容格式校验
-            sn_list = openfile(os.path.join(basedir, 'upload/' + file.filename))
+            # filename.rsplit('.', 1)[1] in current_app.config['ALLOWED_EXTENSIONS']
+            if file.filename.rsplit('.', 1)[1] == 'txt':
+                sn_list = open_txt_file(os.path.join(basedir, 'upload/' + file.filename))
+            if file.filename.rsplit('.', 1)[1] == 'xlsx':
+                sn_list = open_xlsx_file(os.path.join(basedir, 'upload/' + file.filename))
             # 循环增加序列号导入数据库
             for i in range(len(sn_list)):
                 # if re.match(reg_sn, sn_list[i]):#判断是否有合法的序列号
                 if search_sn(sn_list[i]):#判断是否有重复的序列号
-                    flash('序列号：{0} 已经存在，不能重复导入！'.format(re.match(reg_sn, sn_list[i]).group()), 'warning')
+                    flash('序列号：{0} 已经存在，不能重复导入！'.format(sn_list[i]), 'warning')
                     pass  #可以补充有重复序列号的处理逻辑
                 else:
                     series_number = sn_list[i]
@@ -100,7 +115,7 @@ def sn_add():
             flash('本次共导入{0}序列号{1}条！'.format(category_name, count), 'success')
             return redirect(url_for('.sn_add'))
         else:
-            flash('文件上传失败！这里只能上传无格式文本文件，且文件名后缀是以.txt结尾。', 'warning')
+            flash('文件上传失败！这里只能上传txt和xlsx文件。', 'warning')
     return render_template('sn_page.html', form=form)
 
 
