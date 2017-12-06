@@ -4,7 +4,7 @@
 <head>
 {% block head %}
     {{ super() }}
-    <title>{% block title %}活动兑换码提交{% endblock title %}</title>
+    <title>{% block title %}活动兑换码增加{% endblock title %}</title>
 {% endblock head %}
 </head>
 
@@ -15,6 +15,25 @@
     {% block page_content %}
         {{ wtf.quick_form(form) }}
         <br><br>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">文件导入说明</h3>
+            </div>
+            <div class="panel-body">
+                <p>序列号文件导入支持.TXT和.XLSX两种文件导入方式。<h5 style="color: brown">注意：先选择活动类别再进行文件导入。</h5></p>
+                <p></p>
+                <p>TXT文件格式要求：<br>
+                    1.文件中每行一个序列号。<br>
+                    2.行首，行末不要有空格。<br>
+                </p>
+                <p></p>
+                <p>
+                    XLSX文件格式要求：<br>
+                    1.序列号需放在Sheet1表单中。<br>
+                    2.从首行首列开始保存序列号。<br>
+                </p>
+            </div>
+        </div>
         {% include "_layout.html" %}
     {% endblock %}
 </div>

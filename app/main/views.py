@@ -10,7 +10,8 @@ from .webhooks import SNSendDing
 from openpyxl import load_workbook
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-reg_sn = r'([A-Z0-9]{4}-){3}[A-Z0-9]{4}'
+# reg_sn = r'([A-Z0-9]{4}-){3}[A-Z0-9]{4}'
+reg_sn = r'([A-Z0-9]{4}-){3}[A-Z0-9]{4}|zc\w{12}'
 
 
 # 判断上传文件名称是否符合要求
@@ -80,38 +81,43 @@ def sn_add():
         category_name = '百度网盘活动'
     if form.category.data == 'vip-8':
         category_name = 'VIP-8元红包'
+    if form.category.data == 'jd-50':
+        category_name = '京东50元红包'
+    if form.category.data == 'jd-100':
+        category_name = '京东100元红包'
     if request.method == 'POST':
         file = request.files['filename']
         if file and allowed_file(file.filename):
             file.save(os.path.join(basedir, 'upload/' + file.filename))
             flash('文件上传成功！', 'success')
-            # 增加文件内容格式校验
-            # filename.rsplit('.', 1)[1] in current_app.config['ALLOWED_EXTENSIONS']
+            # 根据文件格式，选择打开方式
             if file.filename.rsplit('.', 1)[1] == 'txt':
                 sn_list = open_txt_file(os.path.join(basedir, 'upload/' + file.filename))
             if file.filename.rsplit('.', 1)[1] == 'xlsx':
                 sn_list = open_xlsx_file(os.path.join(basedir, 'upload/' + file.filename))
             # 循环增加序列号导入数据库
             for i in range(len(sn_list)):
-                # if re.match(reg_sn, sn_list[i]):#判断是否有合法的序列号
-                if search_sn(sn_list[i]):#判断是否有重复的序列号
-                    flash('序列号：{0} 已经存在，不能重复导入！'.format(sn_list[i]), 'warning')
-                    pass  #可以补充有重复序列号的处理逻辑
+                if re.match(reg_sn, sn_list[i]):#判断是否有合法的序列号
+                    if search_sn(sn_list[i]):#判断是否有重复的序列号
+                        flash('序列号：{0} 已经存在，不能重复导入！'.format(sn_list[i]), 'warning')
+                        pass  #可以补充有重复序列号的处理逻辑
+                    else:
+                        series_number = sn_list[i]
+                        category = form.category.data
+                        sn_input_date = form.sn_input_date.data
+                        sn_output_date = None
+                        user_account = None
+                        receipt_status = False
+                        db.session.add(SeriesNumber(series_number=series_number,
+                                                    category=category,
+                                                    sn_input_date=sn_input_date,
+                                                    sn_output_date=sn_output_date,
+                                                    user_account=user_account,
+                                                    receipt_status=receipt_status))
+                        db.session.commit()
+                        count += 1
                 else:
-                    series_number = sn_list[i]
-                    category = form.category.data
-                    sn_input_date = form.sn_input_date.data
-                    sn_output_date = None
-                    user_account = None
-                    receipt_status = False
-                    db.session.add(SeriesNumber(series_number=series_number,
-                                                category=category,
-                                                sn_input_date=sn_input_date,
-                                                sn_output_date=sn_output_date,
-                                                user_account=user_account,
-                                                receipt_status=receipt_status))
-                    db.session.commit()
-                    count += 1
+                    flash('序列号：{0} 格式不合法，无法导入！'.format(sn_list[i]), 'warning')
             flash('本次共导入{0}序列号{1}条！'.format(category_name, count), 'success')
             return redirect(url_for('.sn_add'))
         else:
@@ -129,6 +135,10 @@ def sn_update(activity):
         form.category.data = '百度网盘活动'
     if activity == 'vip-8':
         form.category.data = 'VIP-8元红包'
+    if activity == 'jd-50':
+        form.category.data = '京东50元红包'
+    if activity == 'jd-100':
+        form.category.data = '京东100元红包'
     form.sn_output_date.data = datetime.datetime.today()
     form.sn_stock.data = db.session.query(SeriesNumber).filter_by(category=activity, receipt_status=False).count()
     if request.method == 'POST' and form.validate():
@@ -159,7 +169,7 @@ def sn_update(activity):
         else:
             flash('已经没有序列号可以领取！', 'warning')
         return redirect(url_for('.sn_update', activity=activity))
-    return render_template('sn_page.html', form=form)
+    return render_template('draw_sn.html', form=form)
 
 
 # 领取记录查询

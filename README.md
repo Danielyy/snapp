@@ -70,5 +70,6 @@ python3 manage.py runserver --host 0.0.0.0
 ````
 4. 数据库迁移：
 ````
+python3 manage.py db init #初始化
 python3 manage.py db migrate -m "initial migration" #建立数据库迁移脚本
 python3 manage.py db upgrade #升级初始化数据库
